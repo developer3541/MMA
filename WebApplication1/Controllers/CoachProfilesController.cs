@@ -1,39 +1,67 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NuGet.Common;
 using System.Security.Claims;
 using WebApplication1.Data;
 using WebApplication1.DTOs;
+using WebApplication1.Identity;
 using WebApplication1.Models;
 
 namespace WebApplication1.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize] // حماية بالـ JWT
     public class CoachProfilesController : ControllerBase
     {
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public CoachProfilesController(AppDbContext context, IMapper mapper)
+        public CoachProfilesController(AppDbContext context, IMapper mapper,
+        UserManager<ApplicationUser> userManager)
         {
             _context = context;
             _mapper = mapper;
+            _userManager = userManager;
+
         }
 
         // GET: api/CoachProfiles
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CoachProfileResponseDto>>> GetAll()
+        public async Task<IActionResult> GetAll()
         {
-            var coaches = await _context.CoachProfiles
-                .Include(c => c.User)
-                .Include(c => c.Sessions)
-                .Include(c => c.FeedbacksReceived)
-                .ToListAsync();
-
-            return _mapper.Map<List<CoachProfileResponseDto>>(coaches);
+            ResponseModel responseModel = new ResponseModel();
+            try
+            {
+                var coaches = await _context.CoachProfiles
+            .AsNoTracking()
+            .Select(c => new CoachListDto
+            {
+                CoachId = c.Id,
+                FullName = c.User.FirstName + " " + c.User.LastName,
+                Email = c.User.Email,
+                Specialization = c.Specialization,
+                Certifications = c.Certifications,
+                CoachingYears = c.CoachingYears,
+                BlackBeltRanking = c.BlackBeltRanking
+            })
+            .OrderBy(c => c.FullName)
+            .ToListAsync();
+                responseModel.Message = "Session Updated";
+                responseModel.Status = true;
+                responseModel.Model = coaches;
+                return new OkObjectResult(responseModel);
+            }
+            catch (Exception ex)
+            {
+                responseModel.Message = ex.Message.ToString();
+                responseModel.Status = false;
+                responseModel.Model = null;
+                return new BadRequestObjectResult(responseModel);
+            }
         }
 
         // GET: api/CoachProfiles/me
@@ -58,19 +86,32 @@ namespace WebApplication1.Controllers
         }
 
         // GET: api/CoachProfiles/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<CoachProfileResponseDto>> Get(int id)
+        [HttpPost("get-single-coach")]
+        public async Task<IActionResult> Get([FromBody] int id)
         {
-            var coach = await _context.CoachProfiles
-                .Include(c => c.User)
-                .Include(c => c.Sessions)
-                .Include(c => c.FeedbacksReceived)
-                .FirstOrDefaultAsync(c => c.Id == id);
+            ResponseModel responseModel = new ResponseModel();
+            try
+            {
+                var coach = await _context.CoachProfiles
+                    .Include(c => c.User)
+                    .Include(c => c.Sessions)
+                    .Include(c => c.FeedbacksReceived)
+                    .FirstOrDefaultAsync(c => c.Id == id);
 
-            if (coach == null)
-                return NotFound();
+                if (coach == null)
+                    throw new Exception("Not Found");
 
-            return _mapper.Map<CoachProfileResponseDto>(coach);
+                responseModel.Model = _mapper.Map<CoachProfileResponseDto>(coach);
+                responseModel.Status = true;
+                responseModel.Message = "Retrieved";
+                return new OkObjectResult(responseModel);
+            }
+            catch (Exception ex)
+            {
+                responseModel.Message = ex.Message;
+                responseModel.Status = false;
+                return new BadRequestObjectResult(responseModel);
+            }
         }
 
         // POST: api/CoachProfiles
@@ -126,17 +167,43 @@ namespace WebApplication1.Controllers
         }
 
         // PUT: api/CoachProfiles/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, UpdateCoachProfileDto dto)
+        [HttpPost("update-coach-profile")]
+        public async Task<IActionResult> Update([FromBody] UpdateCoachProfileDto dto)
         {
-            var coach = await _context.CoachProfiles.FindAsync(id);
-            if (coach == null)
-                return NotFound();
+            ResponseModel responseModel = new ResponseModel();
+            try
+            {
+                var coach = await _context.CoachProfiles
+       .Include(c => c.User)
+       .SingleAsync(c => c.Id == dto.Id);
 
-            _mapper.Map(dto, coach);
-            await _context.SaveChangesAsync();
+                coach.User.FirstName = dto.FirstName;
+                coach.User.LastName = dto.LastName;
 
-            return NoContent();
+                if (coach.User.Email != dto.Email)
+                {
+                    await _userManager.SetEmailAsync(coach.User, dto.Email);
+                    await _userManager.SetUserNameAsync(coach.User, dto.Email);
+                }
+
+                coach.Specialization = dto.Specialization;
+                coach.BlackBeltRanking = dto.BlackBeltRanking;
+                coach.CoachingYears = dto.CoachingYears;
+
+                await _context.SaveChangesAsync();
+
+                responseModel.Message = "Session Updated";
+                responseModel.Status = true;
+                responseModel.Model = coach;
+                return new OkObjectResult(responseModel);
+            }
+            catch (Exception ex)
+            {
+                responseModel.Message = ex.Message.ToString();
+                responseModel.Status = false;
+                responseModel.Model = null;
+                return new BadRequestObjectResult(responseModel);
+            }
         }
 
         // DELETE: api/CoachProfiles/5

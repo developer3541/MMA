@@ -14,9 +14,23 @@ namespace WebApplication1.DTOs
 
     public class UpdateCoachProfileDto
     {
-        public string? Bio { get; set; }
+        public int Id { get; set; }
+        public string FirstName { get; set; }
+        public string Email { get; set; }
+        public string LastName { get; set; }
         public string? Specialization { get; set; }
+        public string? BlackBeltRanking { get; set; }
+        public string? CoachingYears { get; set; }
+    }
+    public class CoachListDto
+    {
+        public int CoachId { get; set; }
+        public string FullName { get; set; }
+        public string Email { get; set; }
+        public string Specialization { get; set; }
         public string? Certifications { get; set; }
+        public string CoachingYears { get; set; }
+        public string? BlackBeltRanking { get; set; }
     }
 
     public class CoachProfileResponseDto
@@ -48,7 +62,9 @@ namespace WebApplication1.DTOs
         public DateTime? StartTime { get; set; }
         public DateTime? EndTime { get; set; }
         public int? Capacity { get; set; }
+        public int Id { get; set; }
         public string? Description { get; set; }
+        public string? WhattoBring { get; set; }
         public string? SessionName { get; set; }  // تم إضافته
     }
 
@@ -138,11 +154,12 @@ namespace WebApplication1.DTOs
 
     public class UpdateMemberProfileDto
     {
+        public int Id { get; set; }
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
-        public string? EmergencyContactName { get; set; }
-        public string? EmergencyContactPhone { get; set; }
-        public string? MedicalInfo { get; set; }
+        public string? Email { get; set; }
+        //public string? EmergencyContactPhone { get; set; }
+        //public string? MedicalInfo { get; set; }
     }
 
     public class MemberProfileResponseDto
@@ -297,6 +314,32 @@ namespace WebApplication1.DTOs
         public int CurrentStreak { get; set; }
         public int BestStreak { get; set; }
         public int TotalSessions { get; set; }
+    }
+    public class SessionListDto
+    {
+        public int Id { get; set; }
+        public int CoachId { get; set; }
+        public string CoachName { get; set; }
+        public int ClassTypeId { get; set; }
+        public string ClassTypeName { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
+        public int Capacity { get; set; }
+        public string Description { get; set; }
+        public string SessionName { get; set; }
+        public int BookingsCount { get; set; }
+        public int AttendanceCount { get; set; }
+    }
+    public class CoachSessionDto
+    {
+        public int Id { get; set; }
+        public string SessionName { get; set; }
+        public string ClassTypeName { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
+        public int Capacity { get; set; }
+        public int BookingsCount { get; set; }
+        public int AttendanceCount { get; set; }
     }
 
 

@@ -11,11 +11,13 @@ namespace WebApplication1.Models
         public string Bio { get; set; }
         public string Specialization { get; set; }
         public string? Certifications { get; set; }
+        public string? BlackBeltRanking { get; set; }
+        public string? CoachingYears { get; set; }
 
         public ApplicationUser User { get; set; }
         public ICollection<Session> Sessions { get; set; }
         public ICollection<Feedback> FeedbacksReceived { get; set; }
     }
 
-    
+
 }

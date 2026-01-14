@@ -1,10 +1,13 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NuGet.Common;
 using System.Security.Claims;
 using WebApplication1.Data;
 using WebApplication1.DTOs;
+using WebApplication1.Identity;
 using WebApplication1.Models;
 using WebApplication1.Services;
 
@@ -20,13 +23,17 @@ namespace WebApplication1.Controllers
         private readonly IMemberStatsService _statsService;
         private readonly ISessionQueryService _sessionQueryService;
         private readonly ILeaderboardService _leaderboardService;
-        public MemberProfilesController(AppDbContext context, IMapper mapper, IMemberStatsService memberStatsService, ISessionQueryService sessionQueryService, ILeaderboardService leaderboardService)
+        private readonly UserManager<ApplicationUser> _userManager;
+
+        public MemberProfilesController(AppDbContext context, IMapper mapper, IMemberStatsService memberStatsService, ISessionQueryService sessionQueryService, ILeaderboardService leaderboardService,
+        UserManager<ApplicationUser> userManager)
         {
             _context = context;
             _mapper = mapper;
             _statsService = memberStatsService;
             _sessionQueryService = sessionQueryService;
             _leaderboardService = leaderboardService;
+            _userManager = userManager;
         }
 
         // GET: api/MemberProfiles
@@ -60,26 +67,37 @@ namespace WebApplication1.Controllers
         }
 
         // GET: api/MemberProfiles/me
-        [HttpGet("get-my-profile")]
-        public async Task<ActionResult<MemberProfileResponseDto>> GetMyProfile()
+        [HttpPost("get-my-profile")]
+        public async Task<ActionResult<MemberProfileResponseDto>> GetMyProfile([FromBody] int memberid)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            //var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized();
-
-            var member = await _context.MemberProfiles
-                .Include(m => m.User)
-                .Include(m => m.Bookings)
-                .Include(m => m.Attendances)
-                .Include(m => m.FeedbacksGiven)
-                .Include(m => m.ProgressRecords)
-                .FirstOrDefaultAsync(m => m.UserId == userId);
-
-            if (member == null)
-                return NotFound(new { message = "Member profile not found for current user" });
-
-            return _mapper.Map<MemberProfileResponseDto>(member);
+            //if (string.IsNullOrEmpty(userId))
+            //    return Unauthorized();
+            ResponseModel responseModel = new ResponseModel();
+            try
+            {
+                var member = await _context.MemberProfiles
+                    .Include(m => m.User)
+                    .Include(m => m.Bookings)
+                    .Include(m => m.Attendances)
+                    .Include(m => m.FeedbacksGiven)
+                    .Include(m => m.ProgressRecords)
+                    .FirstOrDefaultAsync(m => m.Id == memberid);
+                if (member == null)
+                    throw new Exception("Member profile not found for current user");
+                responseModel.Status = true;
+                responseModel.Message = "Fetched Data";
+                responseModel.Model = _mapper.Map<MemberProfileResponseDto>(member);
+                return new OkObjectResult(responseModel);
+            }
+            catch (Exception ex)
+            {
+                responseModel.Message = ex.Message.ToString();
+                responseModel.Status = false;
+                responseModel.Model = null;
+                return new BadRequestObjectResult(responseModel);
+            }
         }
 
         // GET: api/MemberProfiles/5
@@ -153,33 +171,70 @@ namespace WebApplication1.Controllers
         }
 
         // PUT: api/MemberProfiles/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, UpdateMemberProfileDto dto)
+        [HttpPost("update-member-profile")]
+        public async Task<IActionResult> Update([FromBody] UpdateMemberProfileDto dto)
         {
-            var member = await _context.MemberProfiles.FindAsync(id);
-            if (member == null)
-                return NotFound();
+            ResponseModel responseModel = new ResponseModel();
+            try
+            {
+                var member = await _context.MemberProfiles.FindAsync(dto.Id);
+                if (member == null)
+                    throw new Exception("Not Found");
 
-            _mapper.Map(dto, member);
-            await _context.SaveChangesAsync();
+                //_mapper.Map(dto, member);
 
-            return NoContent();
+                if (member.User.Email != dto.Email)
+                {
+                    await _userManager.SetEmailAsync(member.User, dto.Email);
+                    await _userManager.SetUserNameAsync(member.User, dto.Email);
+                }
+                member.FirstName = dto.FirstName;
+                member.LastName = dto.LastName;
+
+                _context.MemberProfiles.Update(member);
+                await _context.SaveChangesAsync();
+                responseModel.Message = "Member Profile Updated";
+                responseModel.Status = true;
+                responseModel.Model = member;
+                return new OkObjectResult(responseModel);
+
+            }
+            catch (Exception ex)
+            {
+                responseModel.Message = ex.Message.ToString();
+                responseModel.Status = false;
+                responseModel.Model = null;
+                return new BadRequestObjectResult(responseModel);
+            }
         }
 
         // DELETE: api/MemberProfiles/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        [HttpPost("delete-member-profile")]
+        public async Task<IActionResult> Delete([FromBody] int id)
         {
-            var member = await _context.MemberProfiles.FindAsync(id);
-            if (member == null)
-                return NotFound();
+            ResponseModel responseModel = new ResponseModel();
+            try
+            {
+                var member = await _context.MemberProfiles.FindAsync(id);
+                if (member == null)
+                    throw new Exception("Not Found");
 
-            _context.MemberProfiles.Remove(member);
-            await _context.SaveChangesAsync();
+                _context.MemberProfiles.Remove(member);
+                await _context.SaveChangesAsync();
+                responseModel.Message = "Member Profile Deleted";
+                responseModel.Status = true;
+                return new OkObjectResult(responseModel);
 
-            return NoContent();
+            }
+            catch (Exception ex)
+            {
+                responseModel.Message = ex.Message.ToString();
+                responseModel.Status = false;
+                responseModel.Model = null;
+                return new BadRequestObjectResult(responseModel);
+            }
         }
-        [HttpGet("get-member-stats")]
+        [HttpPost("get-member-stats")]
         public async Task<IActionResult> GetStats([FromBody] int memberId)
         {
             ResponseModel responseModel = new ResponseModel();
@@ -226,6 +281,29 @@ namespace WebApplication1.Controllers
             try
             {
                 ResponseModel res = await _sessionQueryService.GetUpcomingSessionsAsync(memberId);
+                if (res.Status)
+                {
+                    return new OkObjectResult(res);
+                }
+                else
+                {
+                    return new BadRequestObjectResult(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                ResponseModel responseModel = new ResponseModel();
+                responseModel.Status = false;
+                responseModel.Message = ex.Message.ToString() + " " + ex.StackTrace.ToString();
+                return new BadRequestObjectResult(responseModel);
+            }
+        }
+        [HttpPost("member-getall-sessions")]
+        public async Task<IActionResult> MemberSessions([FromBody] int memberId)
+        {
+            try
+            {
+                ResponseModel res = await _sessionQueryService.GetAllSessionsAsync(memberId);
                 if (res.Status)
                 {
                     return new OkObjectResult(res);

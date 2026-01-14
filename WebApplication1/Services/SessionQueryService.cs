@@ -46,6 +46,38 @@ namespace WebApplication1.Services
             }
             return responseModel;
         }
+        public async Task<ResponseModel> GetAllSessionsAsync(int memberId)
+        {
+            ResponseModel responseModel = new ResponseModel();
+            try
+            {
+                var now = DateTime.UtcNow;
+
+                var res = await _context.Bookings
+                    .Where(b => b.MemberId == memberId)
+                    .Select(b => new UpcomingSessionDto
+                    {
+                        SessionId = b.Session.Id,
+                        SessionName = b.Session.SessionName,
+                        StartTime = b.Session.StartTime,
+                        EndTime = b.Session.EndTime,
+                        CoachName = b.Session.Coach.User.FirstName + " " + b.Session.Coach.User.LastName,
+                        ClassType = b.Session.ClassType.Name
+                    })
+                    .OrderBy(x => x.StartTime)
+                    .ToListAsync();
+                responseModel.Model = res;
+                responseModel.Status = true;
+                responseModel.Message = "Retrieved";
+            }
+            catch (Exception ex)
+            {
+                responseModel.Message = ex.Message.ToString() + " " + ex.StackTrace.ToString();
+                responseModel.Status = false;
+
+            }
+            return responseModel;
+        }
         public async Task<ResponseModel> GetAvailableSessionsAsync(int memberId)
         {
             ResponseModel responseModel = new ResponseModel();
