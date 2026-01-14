@@ -7,6 +7,10 @@ namespace WebApplication1.Services
         Task<ResponseModel> GetUpcomingSessionsAsync(int memberId);
         Task<ResponseModel> GetAvailableSessionsAsync(int memberId);
         Task<ResponseModel> GetAllSessionsAsync(int memberId);
+        Task<ResponseModel> GetCalendarAsync(
+        int memberId,
+        int month,
+        int year);
 
     }
 

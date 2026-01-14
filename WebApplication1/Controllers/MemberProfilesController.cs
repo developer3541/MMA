@@ -321,6 +321,29 @@ namespace WebApplication1.Controllers
                 return new BadRequestObjectResult(responseModel);
             }
         }
+        [HttpPost("member-calendar")]
+        public async Task<IActionResult> MemberSessions([FromBody] MemberScheduleRequestDto dto)
+        {
+            try
+            {
+                ResponseModel res = await _sessionQueryService.GetCalendarAsync(dto.MemberId, dto.Month, dto.Year);
+                if (res.Status)
+                {
+                    return new OkObjectResult(res);
+                }
+                else
+                {
+                    return new BadRequestObjectResult(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                ResponseModel responseModel = new ResponseModel();
+                responseModel.Status = false;
+                responseModel.Message = ex.Message.ToString() + " " + ex.StackTrace.ToString();
+                return new BadRequestObjectResult(responseModel);
+            }
+        }
         [HttpGet("leaderboard")]
         public async Task<IActionResult> Leaderboard()
         {

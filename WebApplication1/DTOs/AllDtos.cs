@@ -32,6 +32,30 @@ namespace WebApplication1.DTOs
         public string CoachingYears { get; set; }
         public string? BlackBeltRanking { get; set; }
     }
+    public class MemberScheduleItemDto
+    {
+        public int SessionId { get; set; }
+        public DateTime Date { get; set; }
+        public TimeSpan StartTime { get; set; }
+        public TimeSpan EndTime { get; set; }
+        public string SessionName { get; set; }
+        public string ClassType { get; set; }
+        public string CoachName { get; set; }
+        public BookingStatus BookingStatus { get; set; }
+        public AttendanceStatus? AttendanceStatus { get; set; }
+        public string SessionState { get; set; } // Upcoming / Completed
+    }
+    public class MemberScheduleDayDto
+    {
+        public DateTime Date { get; set; }
+        public List<MemberScheduleItemDto> Sessions { get; set; } = new();
+    }
+    public class MemberScheduleRequestDto
+    {
+        public int MemberId { get; set; }
+        public int Month { get; set; } // 1 - 12
+        public int Year { get; set; }
+    }
 
     public class CoachProfileResponseDto
     {

@@ -78,6 +78,74 @@ namespace WebApplication1.Services
             }
             return responseModel;
         }
+        public async Task<ResponseModel> GetCalendarAsync(
+        int memberId,
+        int month,
+        int year)
+        {
+            ResponseModel responseModel = new ResponseModel();
+            try
+            {
+                var monthStart = new DateTime(year, month, 1);
+                var monthEnd = monthStart.AddMonths(1);
+
+                var now = DateTime.UtcNow;
+
+                var sessions = await _context.Bookings
+                    .Where(b =>
+                        b.MemberId == memberId &&
+                        b.Session.StartTime >= monthStart &&
+                        b.Session.StartTime < monthEnd)
+                    .Select(b => new
+                    {
+                        b.SessionId,
+                        b.Status,
+                        b.Session.StartTime,
+                        b.Session.EndTime,
+                        b.Session.SessionName,
+                        ClassType = b.Session.ClassType.Name,
+                        CoachName = b.Session.Coach.User.FirstName + " " +
+                                    b.Session.Coach.User.LastName,
+                        Attendance = b.Session.Attendances
+                            .Where(a => a.MemberId == memberId)
+                            .Select(a => (AttendanceStatus?)a.Status)
+                            .FirstOrDefault()
+                    })
+                    .ToListAsync();
+
+                var res = sessions
+                    .GroupBy(s => s.StartTime.Date)
+                    .Select(g => new MemberScheduleDayDto
+                    {
+                        Date = g.Key,
+                        Sessions = g.Select(s => new MemberScheduleItemDto
+                        {
+                            SessionId = s.SessionId,
+                            Date = s.StartTime.Date,
+                            StartTime = s.StartTime.TimeOfDay,
+                            EndTime = s.EndTime.TimeOfDay,
+                            SessionName = s.SessionName,
+                            ClassType = s.ClassType,
+                            CoachName = s.CoachName,
+                            BookingStatus = s.Status,
+                            AttendanceStatus = s.Attendance,
+                            SessionState = s.StartTime > now ? "Upcoming" : "Completed"
+                        }).OrderBy(x => x.StartTime).ToList()
+                    })
+                    .OrderBy(x => x.Date)
+                    .ToList();
+                responseModel.Model = res;
+                responseModel.Status = true;
+                responseModel.Message = "Retrieved";
+            }
+            catch (Exception ex)
+            {
+                responseModel.Message = ex.Message.ToString() + " " + ex.StackTrace.ToString();
+                responseModel.Status = false;
+
+            }
+            return responseModel;
+        }
         public async Task<ResponseModel> GetAvailableSessionsAsync(int memberId)
         {
             ResponseModel responseModel = new ResponseModel();
