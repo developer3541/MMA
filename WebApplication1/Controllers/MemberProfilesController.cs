@@ -367,6 +367,29 @@ namespace WebApplication1.Controllers
                 return new BadRequestObjectResult(responseModel);
             }
         }
+        [HttpPost("members-activity-summary")]
+        public async Task<IActionResult> GetActivitySummary([FromBody] int memberId)
+        {
+            ResponseModel responseModel = new ResponseModel();
+            try
+            {
+                var result = await _sessionQueryService.GetMemberActivityAsync(memberId);
+                if (result.Status)
+                {
+                    return new OkObjectResult(result);
+                }
+                else
+                {
+                    return new BadRequestObjectResult(result);
+                }
+            }
+            catch (Exception ex)
+            {
+                responseModel.Message = ex.Message.ToString();
+                responseModel.Status = false;
+                return new BadRequestObjectResult(responseModel);
 
+            }
+        }
     }
 }

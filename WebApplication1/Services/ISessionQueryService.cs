@@ -11,6 +11,7 @@ namespace WebApplication1.Services
         int memberId,
         int month,
         int year);
+        Task<ResponseModel> GetMemberActivityAsync(int memberId);
 
     }
 

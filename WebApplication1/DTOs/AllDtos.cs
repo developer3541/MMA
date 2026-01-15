@@ -366,5 +366,29 @@ namespace WebApplication1.DTOs
         public int AttendanceCount { get; set; }
     }
 
+    public class MemberActivitySummaryDto
+    {
+        public int TotalSessions { get; set; }
+        public int AttendedSessions { get; set; }
+        public double ConsistencyPercentage { get; set; }
+        public List<ClassActivityBreakdownDto> ActivityBreakdown { get; set; }
+        public List<MemberSessionDetailDto> Sessions { get; set; }
+    }
+    public class ClassActivityBreakdownDto
+    {
+        public int ClassTypeId { get; set; }
+        public string ClassTypeName { get; set; }
+        public int SessionsCount { get; set; }
+    }
+    public class MemberSessionDetailDto
+    {
+        public int SessionId { get; set; }
+        public string SessionName { get; set; }
+        public string ClassType { get; set; }
+        public DateTime Date { get; set; }
+        public TimeSpan StartTime { get; set; }
+        public TimeSpan EndTime { get; set; }
+        public string Status { get; set; } // Upcoming / Attended / Missed / Cancelled
+    }
 
 }

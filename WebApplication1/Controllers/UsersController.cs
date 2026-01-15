@@ -11,7 +11,6 @@ namespace WebApplication1.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
     public class UsersController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
@@ -115,7 +114,7 @@ namespace WebApplication1.Controllers
 
         // GET: api/users (Admin فقط) – يمكن لاحقاً الفلترة بالـ UserName
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+
         public async Task<IActionResult> GetAllUsers()
         {
             var users = await _userManager.Users.ToListAsync();
@@ -142,7 +141,7 @@ namespace WebApplication1.Controllers
 
         // GET: api/users/{userName} (Admin فقط) – البحث بـ UserName بدل Id
         [HttpGet("{userName}")]
-        [Authorize(Roles = "Admin")]
+
         public async Task<IActionResult> GetUserByUserName(string userName)
         {
             var user = await _userManager.FindByNameAsync(userName);
@@ -166,7 +165,7 @@ namespace WebApplication1.Controllers
 
         // PUT: api/users/{userName}/role  (Admin فقط – لتغيير أي دور لأي مستخدم)
         [HttpPut("{userName}/role")]
-        [Authorize(Roles = "Admin")]
+
         public async Task<IActionResult> ChangeUserRole(string userName, [FromBody] string roleName)
         {
             if (string.IsNullOrWhiteSpace(roleName))
@@ -193,7 +192,7 @@ namespace WebApplication1.Controllers
 
         // DELETE: api/users/{userName} (Admin فقط) – حذف بالـ UserName
         [HttpDelete("{userName}")]
-        [Authorize(Roles = "Admin")]
+
         public async Task<IActionResult> DeleteUser(string userName)
         {
             var user = await _userManager.FindByNameAsync(userName);

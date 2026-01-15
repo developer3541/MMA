@@ -180,6 +180,91 @@ namespace WebApplication1.Services
             }
             return responseModel;
         }
+        public async Task<ResponseModel> GetMemberActivityAsync(int memberId)
+        {
+            ResponseModel responseModel = new ResponseModel();
+            try
+            {
+                var now = DateTime.UtcNow;
+
+                var bookings = await _context.Bookings
+                    .Where(b => b.MemberId == memberId)
+                    .Select(b => new
+                    {
+                        b.SessionId,
+                        b.Status,
+                        b.Session.SessionName,
+                        b.Session.StartTime,
+                        b.Session.EndTime,
+                        ClassTypeId = b.Session.ClassTypeId,
+                        ClassTypeName = b.Session.ClassType.Name,
+                        AttendanceStatus = b.Session.Attendances
+                            .Where(a => a.MemberId == memberId)
+                            .Select(a => (AttendanceStatus?)a.Status)
+                            .FirstOrDefault()
+                    })
+                    .ToListAsync();
+
+                var completedSessions = bookings
+                    .Where(b => b.StartTime < now && b.Status == BookingStatus.Confirmed)
+                    .ToList();
+
+                var attendedSessions = completedSessions
+                    .Count(b => b.AttendanceStatus == AttendanceStatus.Present);
+
+                var consistency = completedSessions.Count == 0
+                    ? 0
+                    : Math.Round((double)attendedSessions / completedSessions.Count * 100, 2);
+
+                var activityBreakdown = bookings
+                    .GroupBy(b => new { b.ClassTypeId, b.ClassTypeName })
+                    .Select(g => new ClassActivityBreakdownDto
+                    {
+                        ClassTypeId = g.Key.ClassTypeId,
+                        ClassTypeName = g.Key.ClassTypeName,
+                        SessionsCount = g.Count()
+                    })
+                    .OrderByDescending(x => x.SessionsCount)
+                    .ToList();
+
+                var sessionDetails = bookings
+                    .OrderByDescending(b => b.StartTime)
+                    .Select(b => new MemberSessionDetailDto
+                    {
+                        SessionId = b.SessionId,
+                        SessionName = b.SessionName,
+                        ClassType = b.ClassTypeName,
+                        Date = b.StartTime.Date,
+                        StartTime = b.StartTime.TimeOfDay,
+                        EndTime = b.EndTime.TimeOfDay,
+                        Status =
+                            b.Status == BookingStatus.Cancelled
+                                ? "Cancelled"
+                                : b.StartTime > now
+                                    ? "Upcoming"
+                                    : b.AttendanceStatus == AttendanceStatus.Present
+                                        ? "Attended"
+                                        : "Missed"
+                    })
+                    .ToList();
+                responseModel.Status = true;
+                responseModel.Message = "Data Retrieved";
+                responseModel.Model = new MemberActivitySummaryDto
+                {
+                    TotalSessions = bookings.Count,
+                    AttendedSessions = attendedSessions,
+                    ConsistencyPercentage = consistency,
+                    ActivityBreakdown = activityBreakdown,
+                    Sessions = sessionDetails
+                };
+            }
+            catch (Exception ex)
+            {
+                responseModel.Message = ex.Message.ToString();
+                responseModel.Status = false;
+            }
+            return responseModel;
+        }
 
 
     }
