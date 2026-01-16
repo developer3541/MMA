@@ -115,7 +115,7 @@ public class AuthService : IAuthService
                 var result = await _userManager.AddToRoleAsync(user, roleToAssign);
                 try
                 {
-                    if (roleToAssign is "Member")
+                    if (roleToAssign is "member")
                     {
                         MemberProfile member = new MemberProfile();
                         member.FirstName = user.FirstName;
@@ -126,7 +126,7 @@ public class AuthService : IAuthService
                         await _Context.SaveChangesAsync();
                         user.ProfileId = Convert.ToString(member.Id);
                     }
-                    else if (roleToAssign is "Coach")
+                    else if (roleToAssign is "coach")
                     {
                         CoachProfile coachProfile = new CoachProfile();
                         coachProfile.UserId = user.Id;
@@ -220,7 +220,7 @@ public class AuthService : IAuthService
             }
             if (user.Roles != null)
             {
-                if (user.Roles.FirstOrDefault() is "Coach")
+                if (user.Roles.FirstOrDefault() is "coach")
                 {
                     var usss = await _Context.CoachProfiles.Where(x => x.UserId == user.Id).FirstOrDefaultAsync();
                     if (usss != null)
@@ -232,7 +232,7 @@ public class AuthService : IAuthService
                         user.ProfileId = "0";
                     }
                 }
-                if (user.Roles.FirstOrDefault() is "Member")
+                if (user.Roles.FirstOrDefault() is "member")
                 {
                     var usss = await _Context.MemberProfiles.Where(x => x.UserId == user.Id).FirstOrDefaultAsync();
                     if (usss != null)
@@ -378,7 +378,7 @@ public class AuthService : IAuthService
                 }
                 if (user.Roles != null)
                 {
-                    if (user.Roles.FirstOrDefault() is "Coach")
+                    if (user.Roles.FirstOrDefault() is "coach")
                     {
                         var usss = await _Context.CoachProfiles.Where(x => x.UserId == user.Id).FirstOrDefaultAsync();
                         if (usss != null)
@@ -390,7 +390,7 @@ public class AuthService : IAuthService
                             user.ProfileId = "0";
                         }
                     }
-                    if (user.Roles.FirstOrDefault() is "Member")
+                    if (user.Roles.FirstOrDefault() is "member")
                     {
                         var usss = await _Context.MemberProfiles.Where(x => x.UserId == user.Id).FirstOrDefaultAsync();
                         if (usss != null)
