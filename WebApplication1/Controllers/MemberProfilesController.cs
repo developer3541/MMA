@@ -68,7 +68,7 @@ namespace WebApplication1.Controllers
 
         // GET: api/MemberProfiles/me
         [HttpPost("get-my-profile")]
-        public async Task<ActionResult<MemberProfileResponseDto>> GetMyProfile([FromBody] int memberid)
+        public async Task<ActionResult<MemberProfileResponseDto>> GetMyProfile(int memberId)
         {
             //var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -83,7 +83,7 @@ namespace WebApplication1.Controllers
                     .Include(m => m.Attendances)
                     .Include(m => m.FeedbacksGiven)
                     .Include(m => m.ProgressRecords)
-                    .FirstOrDefaultAsync(m => m.Id == memberid);
+                    .FirstOrDefaultAsync(m => m.Id == memberId);
                 if (member == null)
                     throw new Exception("Member profile not found for current user");
                 responseModel.Status = true;
@@ -235,7 +235,7 @@ namespace WebApplication1.Controllers
             }
         }
         [HttpPost("get-member-stats")]
-        public async Task<IActionResult> GetStats([FromBody] int memberId)
+        public async Task<IActionResult> GetStats(int memberId)
         {
             ResponseModel responseModel = new ResponseModel();
             try
@@ -253,7 +253,7 @@ namespace WebApplication1.Controllers
             }
         }
         [HttpPost("members-available-sessions")]
-        public async Task<IActionResult> AvailableSessions([FromBody] int memberId)
+        public async Task<IActionResult> AvailableSessions(int memberId)
         {
             ResponseModel responseModel = new ResponseModel();
             try
@@ -276,7 +276,7 @@ namespace WebApplication1.Controllers
             }
         }
         [HttpPost("member-upcoming-sessions")]
-        public async Task<IActionResult> UpcomingSessions([FromBody] int memberId)
+        public async Task<IActionResult> UpcomingSessions(int memberId)
         {
             try
             {
@@ -299,7 +299,7 @@ namespace WebApplication1.Controllers
             }
         }
         [HttpPost("member-getall-sessions")]
-        public async Task<IActionResult> MemberSessions([FromBody] int memberId)
+        public async Task<IActionResult> MemberSessions(int memberId)
         {
             try
             {
@@ -368,7 +368,7 @@ namespace WebApplication1.Controllers
             }
         }
         [HttpPost("members-activity-summary")]
-        public async Task<IActionResult> GetActivitySummary([FromBody] int memberId)
+        public async Task<IActionResult> GetActivitySummary(int memberId)
         {
             ResponseModel responseModel = new ResponseModel();
             try

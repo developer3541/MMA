@@ -2,6 +2,7 @@
 using Google.Apis.Auth; // Added
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;
@@ -217,6 +218,33 @@ public class AuthService : IAuthService
                 responseModel.Message = "Invalid username or password.";
                 return responseModel;
             }
+            if (user.Roles != null)
+            {
+                if (user.Roles.FirstOrDefault() is "Coach")
+                {
+                    var usss = await _Context.CoachProfiles.Where(x => x.UserId == user.Id).FirstOrDefaultAsync();
+                    if (usss != null)
+                    {
+                        user.ProfileId = Convert.ToString(usss.Id);
+                    }
+                    else
+                    {
+                        user.ProfileId = "0";
+                    }
+                }
+                if (user.Roles.FirstOrDefault() is "Member")
+                {
+                    var usss = await _Context.MemberProfiles.Where(x => x.UserId == user.Id).FirstOrDefaultAsync();
+                    if (usss != null)
+                    {
+                        user.ProfileId = Convert.ToString(usss.Id);
+                    }
+                    else
+                    {
+                        user.ProfileId = "0";
+                    }
+                }
+            }
             responseModel.Status = true;
             responseModel.Message = "Login successful.";
             string jwt = await GenerateJwtToken(user);
@@ -347,6 +375,33 @@ public class AuthService : IAuthService
                 if (needsUpdate)
                 {
                     await _userManager.UpdateAsync(user);
+                }
+                if (user.Roles != null)
+                {
+                    if (user.Roles.FirstOrDefault() is "Coach")
+                    {
+                        var usss = await _Context.CoachProfiles.Where(x => x.UserId == user.Id).FirstOrDefaultAsync();
+                        if (usss != null)
+                        {
+                            user.ProfileId = Convert.ToString(usss.Id);
+                        }
+                        else
+                        {
+                            user.ProfileId = "0";
+                        }
+                    }
+                    if (user.Roles.FirstOrDefault() is "Member")
+                    {
+                        var usss = await _Context.MemberProfiles.Where(x => x.UserId == user.Id).FirstOrDefaultAsync();
+                        if (usss != null)
+                        {
+                            user.ProfileId = Convert.ToString(usss.Id);
+                        }
+                        else
+                        {
+                            user.ProfileId = "0";
+                        }
+                    }
                 }
             }
             responseModel.Status = true;

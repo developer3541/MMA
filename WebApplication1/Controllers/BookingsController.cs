@@ -107,7 +107,7 @@ namespace WebApplication1.Controllers
         }
         [HttpPost("update-member-streak")]
 
-        public async Task<ResponseModel> UpdateMemberStreakAsync([FromBody] int memberId)
+        public async Task<ResponseModel> UpdateMemberStreakAsync(int memberId)
         {
             ResponseModel responseModel = new ResponseModel();
             try
