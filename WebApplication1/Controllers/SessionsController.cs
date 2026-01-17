@@ -63,7 +63,7 @@ namespace WebApplication1.Controllers
         }
 
         [HttpPost("get-single-session")]
-        public async Task<IActionResult> Get([FromBody] int id)
+        public async Task<IActionResult> Get(int id)
         {
             ResponseModel responseModel = new ResponseModel();
             try
@@ -197,30 +197,44 @@ namespace WebApplication1.Controllers
         }
         [HttpPost("get-coach-sessions")]
 
-        public async Task<IActionResult> GetCoachSessionsAsync([FromBody] int coachId)
+        public async Task<IActionResult> GetCoachSessionsAsync(int coachId)
         {
             ResponseModel responseModel = new ResponseModel();
 
             try
             {
-                var session = await _context.Sessions
-                .Where(s => s.CoachId == coachId)
-                .OrderByDescending(s => s.StartTime)
-                .Select(s => new CoachSessionDto
-                {
-                    Id = s.Id,
-                    SessionName = s.SessionName,
-                    ClassTypeName = s.ClassType.Name,
-                    StartTime = s.StartTime,
-                    EndTime = s.EndTime,
-                    Capacity = s.Capacity,
-                    BookingsCount = s.Bookings.Count(b => b.Status == BookingStatus.Confirmed),
-                    AttendanceCount = s.Attendances.Count(a => a.Status == AttendanceStatus.Present)
-                })
-                .ToListAsync();
-                responseModel.Message = "Session Updated";
+                var now = DateTime.UtcNow;
+
+                var sessions = await _context.Sessions
+                    .Where(s => s.CoachId == coachId)
+                    .OrderByDescending(s => s.StartTime)
+                    .Select(s => new CoachSessionDto
+                    {
+                        Id = s.Id.ToString(),
+                        Title = s.SessionName,
+                        StartTime = s.StartTime,
+                        EndTime = s.EndTime,
+
+                        EnrolledCount = s.Bookings.Count(b =>
+                            b.Status == BookingStatus.Confirmed),
+
+                        TotalSpots = s.Capacity,
+
+                        Status =
+                            s.StartTime > now
+                                ? SessionStatus.Upcoming
+                                : (s.StartTime <= now && s.EndTime >= now)
+                                    ? SessionStatus.InProgress
+                                    : SessionStatus.Completed,
+
+                        Description = s.Description,
+                        WhatToBring = s.WhattoBring
+                    })
+                    .ToListAsync();
+
+                responseModel.Message = "Session Retrieved";
                 responseModel.Status = true;
-                responseModel.Model = session;
+                responseModel.Model = sessions;
                 return new OkObjectResult(responseModel);
 
             }

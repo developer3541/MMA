@@ -244,13 +244,29 @@ namespace WebApplication1.DTOs
 
     public class BookingResponseDto
     {
-        public int Id { get; set; }
-        public int SessionId { get; set; }
-        public string SessionName { get; set; }
+        public int BookingId { get; set; }
+        public string BookingStatus { get; set; }
+        public DateTime BookingTime { get; set; }
+
         public int MemberId { get; set; }
         public string MemberName { get; set; }
-        public DateTime BookingTime { get; set; }
-        public BookingStatus Status { get; set; }
+
+        public SessionDto Session { get; set; }
+    }
+
+    public class SessionDto
+    {
+        public int Id { get; set; }
+        public string Title { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
+        public int EnrolledCount { get; set; }
+        public int TotalSpots { get; set; }
+        public string Status { get; set; }
+        public string? Description { get; set; }
+        public string? WhatToBring { get; set; }
+        public string CoachName { get; set; }
+        public string ClassTypeName { get; set; }
     }
 
     // ---------------- Attendance DTOs ----------------
@@ -356,15 +372,17 @@ namespace WebApplication1.DTOs
     }
     public class CoachSessionDto
     {
-        public int Id { get; set; }
-        public string SessionName { get; set; }
-        public string ClassTypeName { get; set; }
+        public string Id { get; set; }              // string for frontend compatibility
+        public string Title { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
-        public int Capacity { get; set; }
-        public int BookingsCount { get; set; }
-        public int AttendanceCount { get; set; }
+        public int EnrolledCount { get; set; }
+        public int TotalSpots { get; set; }
+        public SessionStatus Status { get; set; }
+        public string Description { get; set; }
+        public string WhatToBring { get; set; }
     }
+
 
     public class MemberActivitySummaryDto
     {
@@ -389,6 +407,24 @@ namespace WebApplication1.DTOs
         public TimeSpan StartTime { get; set; }
         public TimeSpan EndTime { get; set; }
         public string Status { get; set; } // Upcoming / Attended / Missed / Cancelled
+    }
+    public class MemberSessionDto   
+    {
+        public string Id { get; set; }
+        public string Title { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
+
+        public string CoachName { get; set; }
+        public string CoachTitle { get; set; }
+
+        public int TotalSpots { get; set; }
+        public int AvailableSpots { get; set; }
+
+        public string? Description { get; set; }
+        public string? WhatToBring { get; set; }
+
+        public bool IsBooked { get; set; }
     }
 
 }

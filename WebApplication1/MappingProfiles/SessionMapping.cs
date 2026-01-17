@@ -17,5 +17,7 @@ namespace WebApplication1.MappingProfiles
             CreateMap<CreateSessionDto, Session>();
             CreateMap<UpdateSessionDto, Session>();
         }
+        
+
     }
 }

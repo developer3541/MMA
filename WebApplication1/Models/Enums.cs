@@ -18,4 +18,13 @@
         Present,
         Absent
     }
+    public enum SessionStatus
+    {
+        Upcoming,
+        InProgress,
+        Completed,
+        Missed
+    }
+
+
 }

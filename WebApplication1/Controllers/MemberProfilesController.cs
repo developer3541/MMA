@@ -391,5 +391,60 @@ namespace WebApplication1.Controllers
 
             }
         }
+        [HttpGet("all-member-sessions")]
+        public async Task<IActionResult> GetMemberSessions(int memberId)
+        {
+            try
+            {
+                var now = DateTime.UtcNow;
+
+                var sessions = await _context.Sessions
+                    .Include(s => s.Coach)
+                        .ThenInclude(c => c.User)
+                    .Include(s => s.Bookings)
+                    .Where(s => s.EndTime >= now) // optional: hide past sessions
+                    .OrderBy(s => s.StartTime)
+                    .Select(s => new MemberSessionDto
+                    {
+                        Id = s.Id.ToString(),
+                        Title = s.SessionName,
+                        StartTime = s.StartTime,
+                        EndTime = s.EndTime,
+
+                        CoachName = s.Coach.User.FirstName + " " + s.Coach.User.LastName,
+                        CoachTitle = s.Coach.Specialization,
+
+                        TotalSpots = s.Capacity,
+
+                        AvailableSpots = s.Capacity -
+                            s.Bookings.Count(b => b.Status == BookingStatus.Confirmed),
+
+                        Description = s.Description,
+                        WhatToBring = s.WhattoBring,
+
+                        IsBooked = s.Bookings.Any(b =>
+                            b.MemberId == memberId &&
+                            b.Status == BookingStatus.Confirmed)
+                    })
+                    .ToListAsync();
+
+                return new OkObjectResult(new
+                {
+                    Status = true,
+                    Message = "Member sessions fetched",
+                    Model = sessions
+                });
+            }
+            catch (Exception ex)
+            {
+                ResponseModel responseModel = new ResponseModel();
+
+                responseModel.Message = ex.Message.ToString();
+                responseModel.Status = false;
+                return new BadRequestObjectResult(responseModel);
+
+            }
+        }
+
     }
 }

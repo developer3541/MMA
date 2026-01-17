@@ -27,13 +27,50 @@ namespace WebApplication1.Controllers
             try
             {
                 var bookings = await _context.Bookings
-                    .Include(b => b.Member)
-                        .ThenInclude(m => m.User)
+                 .Include(b => b.Member)
+                   .ThenInclude(m => m.User)
                     .Include(b => b.Session)
-                    .ToListAsync();
+                    .ThenInclude(s => s.Coach)
+                    .ThenInclude(c => c.User)
+                    .Include(b => b.Session)
+                     .ThenInclude(s => s.ClassType)
+                      .Include(b => b.Session)
+                      .ThenInclude(s => s.Bookings)
+                          .Include(b => b.Session)
+                          .ThenInclude(s => s.Attendances)
+                         .ToListAsync();
+                var now = DateTime.UtcNow;
+
+                var result = bookings.Select(b => new BookingResponseDto
+                {
+                    BookingId = b.Id,
+                    BookingStatus = b.Status.ToString(),
+                    BookingTime = b.BookingTime,
+
+                    MemberId = b.MemberId,
+                    MemberName = $"{b.Member.User.FirstName} {b.Member.User.LastName}",
+
+                    Session = new SessionDto
+                    {
+                        Id = b.Session.Id,
+                        Title = b.Session.SessionName,
+                        StartTime = b.Session.StartTime,
+                        EndTime = b.Session.EndTime,
+                        EnrolledCount = b.Session.Bookings.Count,
+                        TotalSpots = b.Session.Capacity,
+                        Description = b.Session.Description,
+                        WhatToBring = b.Session.WhattoBring,
+                        CoachName = $"{b.Session.Coach.User.FirstName} {b.Session.Coach.User.LastName}",
+                        ClassTypeName = b.Session.ClassType.Name,
+                        Status = GetSessionStatus(b.Session, b.MemberId, now).ToString()
+                    }
+                }).ToList();
+
+
                 responseModel.Status = true;
                 responseModel.Message = "Data Fetched";
-                responseModel.Model = _mapper.Map<List<BookingResponseDto>>(bookings);
+                responseModel.Model = result;
+                //responseModel.Model = _mapper.Map<List<BookingResponseDto>>(bookings);
                 return new OkObjectResult(responseModel);
 
             }
@@ -157,6 +194,29 @@ namespace WebApplication1.Controllers
                 responseModel.Status = false;
                 return responseModel;
             }
+        }
+        [NonAction]
+        public static SessionStatus GetSessionStatus(
+    Session session,
+    int memberId,
+    DateTime now)
+        {
+            // Upcoming
+            if (session.StartTime > now)
+                return SessionStatus.Upcoming;
+
+            // In progress
+            if (session.StartTime <= now && session.EndTime >= now)
+                return SessionStatus.InProgress;
+
+            // Session ended → check attendance
+            var attended = session.Attendances
+                .Any(a => a.MemberId == memberId &&
+                          a.Status == AttendanceStatus.Present);
+
+            return attended
+                ? SessionStatus.Completed
+                : SessionStatus.Missed;
         }
     }
 }

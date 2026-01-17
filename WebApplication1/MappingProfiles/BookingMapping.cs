@@ -9,8 +9,8 @@ namespace WebApplication1.MappingProfiles
         public BookingMapping()
         {
             CreateMap<Booking, BookingResponseDto>()
-                .ForMember(dest => dest.MemberName, opt => opt.MapFrom(src => src.Member.User.UserName ?? "غير محدد"))
-                .ForMember(dest => dest.SessionName, opt => opt.MapFrom(src => src.Session != null ? src.Session.SessionName ?? "غير محدد" : "غير محدد"));
+                .ForMember(dest => dest.MemberName, opt => opt.MapFrom(src => src.Member.User.UserName ?? "غير محدد"));
+                //.ForMember(dest => dest.SessionName, opt => opt.MapFrom(src => src.Session != null ? src.Session.SessionName ?? "غير محدد" : "غير محدد"));
 
             CreateMap<CreateBookingDto, Booking>();
             CreateMap<UpdateBookingDto, Booking>();
