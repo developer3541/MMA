@@ -10,7 +10,10 @@
     public enum BookingStatus
     {
         Confirmed,
-        Cancelled
+        Cancelled,
+        Pending,
+        Attended,
+        Missed
     }
 
     public enum AttendanceStatus

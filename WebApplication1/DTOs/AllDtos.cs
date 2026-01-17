@@ -408,7 +408,7 @@ namespace WebApplication1.DTOs
         public TimeSpan EndTime { get; set; }
         public string Status { get; set; } // Upcoming / Attended / Missed / Cancelled
     }
-    public class MemberSessionDto   
+    public class MemberSessionDto
     {
         public string Id { get; set; }
         public string Title { get; set; }
@@ -425,6 +425,16 @@ namespace WebApplication1.DTOs
         public string? WhatToBring { get; set; }
 
         public bool IsBooked { get; set; }
+    }
+    public class CreateBookingResponseDto
+    {
+        public int BookingId { get; set; }
+        public int MemberId { get; set; }
+        public string MemberName { get; set; }
+        public int SessionId { get; set; }
+        public string SessionName { get; set; }
+        public DateTime BookingTime { get; set; }
+        public string BookingStatus { get; set; }
     }
 
 }
